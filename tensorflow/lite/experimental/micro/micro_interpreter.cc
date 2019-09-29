@@ -63,14 +63,16 @@ MicroInterpreter::MicroInterpreter(const Model* model,
                                    const OpResolver& op_resolver,
                                    uint8_t* tensor_arena,
                                    size_t tensor_arena_size,
-                                   ErrorReporter* error_reporter)
+                                   ErrorReporter* error_reporter,
+                                   Profiler* profiler)
     : model_(model),
       op_resolver_(op_resolver),
       error_reporter_(error_reporter),
       context_(),
       allocator_(&context_, model_, tensor_arena, tensor_arena_size,
                  error_reporter_),
-      tensors_allocated_(false) {
+      tensors_allocated_(false),
+      profiler_(profiler) {
   auto* subgraphs = model->subgraphs();
   if (subgraphs->size() != 1) {
     error_reporter->Report("Only 1 subgraph is currently supported.\n");
@@ -84,6 +86,7 @@ MicroInterpreter::MicroInterpreter(const Model* model,
   context_.impl_ = static_cast<void*>(this);
   context_.ReportError = ReportOpError;
   context_.recommended_num_threads = 1;
+  context_.profiler = profiler_;
 
   // If the system is big endian then convert weights from the flatbuffer from
   // little to big endian on startup so that it does not need to be done during
@@ -251,6 +254,7 @@ TfLiteStatus MicroInterpreter::Invoke() {
     }
 
     if (registration->invoke) {
+      TFLITE_SCOPED_OPERATOR_PROFILE(profiler_, i);
       TfLiteStatus invoke_status = registration->invoke(&context_, &node);
       if (invoke_status != kTfLiteOk) {
         error_reporter_->Report(
@@ -259,7 +263,7 @@ TfLiteStatus MicroInterpreter::Invoke() {
         return kTfLiteError;
       }
     }
-
+    
     if (registration->free) {
       registration->free(&context_, user_data);
     }

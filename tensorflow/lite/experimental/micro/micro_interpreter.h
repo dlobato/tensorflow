@@ -18,6 +18,7 @@ limitations under the License.
 #include "tensorflow/lite/c/c_api_internal.h"
 #include "tensorflow/lite/core/api/error_reporter.h"
 #include "tensorflow/lite/core/api/op_resolver.h"
+#include "tensorflow/lite/core/api/profiler.h"
 #include "tensorflow/lite/experimental/micro/micro_allocator.h"
 #include "tensorflow/lite/schema/schema_generated.h"
 
@@ -35,7 +36,7 @@ class MicroInterpreter {
   // objects, ownership remains with the caller.
   MicroInterpreter(const Model* model, const OpResolver& op_resolver,
                    uint8_t* tensor_arena, size_t tensor_arena_size,
-                   ErrorReporter* error_reporter);
+                   ErrorReporter* error_reporter, Profiler* profiler);
 
   // Specify a particular tensor as pre-allocated.  This means that this tensor
   // will internally point to the supplied buffer, and no new memory will be
@@ -86,6 +87,7 @@ class MicroInterpreter {
   const flatbuffers::Vector<flatbuffers::Offset<Operator>>* operators_;
 
   const SubGraph* subgraph_;
+  Profiler* const profiler_;
 };
 
 }  // namespace tflite
