@@ -78,7 +78,7 @@ TF_LITE_MICRO_TEST(TestInterpreter) {
   uint8_t allocator_buffer[allocator_buffer_size];
   tflite::MicroInterpreter interpreter(model, mock_resolver, allocator_buffer,
                                        allocator_buffer_size,
-                                       micro_test::reporter);
+                                       micro_test::reporter, nullptr);
   interpreter.AllocateTensors();
   TF_LITE_MICRO_EXPECT_EQ(1, interpreter.inputs_size());
   TF_LITE_MICRO_EXPECT_EQ(1, interpreter.outputs_size());
@@ -113,7 +113,7 @@ TF_LITE_MICRO_TEST(TestInterpreterProvideInputBuffer) {
   uint8_t allocator_buffer[allocator_buffer_size];
   tflite::MicroInterpreter interpreter(model, mock_resolver, allocator_buffer,
                                        allocator_buffer_size,
-                                       micro_test::reporter);
+                                       micro_test::reporter, nullptr);
   interpreter.RegisterPreallocatedInput(
       reinterpret_cast<uint8_t*>(&input_buffer), 0);
   interpreter.AllocateTensors();
